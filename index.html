@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#07110f" />
+    <title>坦克大战 · FC 重制版</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div class="app-shell" id="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-star">★</span>
+          <span class="brand-name">TANK BATTLE</span>
+          <span class="brand-sub">FC 重制版</span>
+        </div>
+        <div class="top-actions">
+          <span class="mode-chip" id="mode-chip">等待出击</span>
+          <button class="icon-btn" id="sound-btn" type="button" title="切换音效">♪ 音效开</button>
+          <button class="icon-btn" id="help-btn" type="button">操作说明</button>
+          <button class="icon-btn" id="home-btn" type="button" title="返回主菜单">主菜单</button>
+        </div>
+      </header>
+
+      <main class="game-layout">
+        <section class="board-column">
+          <div class="board-frame">
+            <canvas id="game-canvas" width="600" height="600" aria-label="坦克大战游戏画面"></canvas>
+            <div class="crt-overlay" aria-hidden="true"></div>
+            <div class="game-overlay hidden" id="game-overlay"></div>
+          </div>
+          <div class="board-footer">
+            <span class="footer-dot"></span>
+            <span id="board-hint">P1 · W A S D 移动 / J 射击</span>
+            <span class="footer-sep" id="board-sep-p2">|</span>
+            <span id="board-hint-2">P2 · 方向键移动 / 空格射击</span>
+            <span class="footer-sep">|</span>
+            <span>ESC 暂停</span>
+          </div>
+        </section>
+
+        <aside class="hud">
+          <section class="hud-card stage-card">
+            <div class="hud-eyebrow">CURRENT STAGE</div>
+            <div class="stage-line">
+              <span class="stage-number" id="hud-stage">01</span>
+              <div class="stage-meta">
+                <strong id="hud-level">经典首关</strong>
+                <span id="hud-mode">单人闯关</span>
+              </div>
+            </div>
+            <div class="enemy-counter">
+              <div class="enemy-number" id="hud-enemies">12</div>
+              <div class="enemy-label">剩余敌军<br /><span>ENEMY LEFT</span></div>
+            </div>
+            <div class="enemy-icons" id="hud-enemy-icons"></div>
+          </section>
+
+          <section class="hud-card player-card-wrap">
+            <div class="hud-eyebrow">OPERATORS</div>
+            <div class="player-list" id="hud-players"></div>
+          </section>
+
+          <section class="hud-card effect-card">
+            <div class="hud-eyebrow">BATTLE STATUS</div>
+            <div class="effect-list" id="hud-effects">
+              <span class="empty-effect">战场平静</span>
+            </div>
+            <div class="score-total" id="hud-score-total">SCORE 000000</div>
+          </section>
+
+          <section class="hud-card control-card" id="control-card">
+            <div class="hud-eyebrow">CONTROLS</div>
+            <div class="control-row human-control-row" id="control-p1">
+              <span class="player-dot p1"></span>
+              <div><b>1P</b><span>W A S D 移动 · J 开火</span></div>
+            </div>
+            <div class="control-row human-control-row" id="control-p2">
+              <span class="player-dot p2"></span>
+              <div><b>2P</b><span>方向键移动 · 空格 / 0 开火</span></div>
+            </div>
+            <div class="control-tips human-control-row" id="control-tips">J / 空格支持按住连射 · ESC 暂停</div>
+            <div class="control-tips hidden" id="control-ai-note">AI 演示进行中：内置算法自动接管移动、瞄准、射击与续关。</div>
+          </section>
+
+          <div class="hud-actions">
+            <button class="secondary-btn" id="pause-btn" type="button">暂停 / 继续</button>
+            <button class="secondary-btn danger-ghost" id="hud-menu-btn" type="button">结束本局</button>
+          </div>
+        </aside>
+      </main>
+    </div>
+
+    <div class="start-screen" id="start-screen">
+      <div class="start-bg-grid" aria-hidden="true"></div>
+      <div class="start-card">
+        <div class="start-art">
+          <div class="art-topline">
+            <span>1UP</span><span>HI-SCORE</span><span>2UP</span>
+          </div>
+          <div class="art-scores">
+            <span>000000</span><span>020000</span><span>000000</span>
+          </div>
+          <svg class="tank-art" viewBox="0 0 300 230" role="img" aria-label="像素坦克插画">
+            <defs>
+              <linearGradient id="tankGlow" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#fff2a8" />
+                <stop offset="1" stop-color="#d7a52d" />
+              </linearGradient>
+            </defs>
+            <g opacity="0.32" fill="#3a6b58">
+              <rect x="22" y="24" width="18" height="6" />
+              <rect x="14" y="30" width="34" height="6" />
+              <rect x="260" y="44" width="18" height="6" />
+              <rect x="252" y="50" width="34" height="6" />
+              <rect x="42" y="184" width="24" height="6" />
+              <rect x="232" y="176" width="24" height="6" />
+            </g>
+            <g transform="translate(150 124)">
+              <rect x="-74" y="-54" width="27" height="108" rx="3" fill="#4e3f13" />
+              <rect x="47" y="-54" width="27" height="108" rx="3" fill="#4e3f13" />
+              <g fill="#221f13">
+                <rect x="-70" y="-50" width="20" height="8" />
+                <rect x="-70" y="-32" width="20" height="8" />
+                <rect x="-70" y="-14" width="20" height="8" />
+                <rect x="-70" y="4" width="20" height="8" />
+                <rect x="-70" y="22" width="20" height="8" />
+                <rect x="-70" y="40" width="20" height="8" />
+                <rect x="50" y="-50" width="20" height="8" />
+                <rect x="50" y="-32" width="20" height="8" />
+                <rect x="50" y="-14" width="20" height="8" />
+                <rect x="50" y="4" width="20" height="8" />
+                <rect x="50" y="22" width="20" height="8" />
+                <rect x="50" y="40" width="20" height="8" />
+              </g>
+              <rect x="-42" y="-55" width="84" height="110" rx="7" fill="#1b211b" />
+              <rect x="-37" y="-50" width="74" height="100" rx="5" fill="url(#tankGlow)" />
+              <rect x="-28" y="-42" width="56" height="8" fill="#fff2a8" opacity="0.55" />
+              <rect x="-24" y="32" width="48" height="11" rx="2" fill="#8e6720" opacity="0.7" />
+              <rect x="-7" y="-84" width="14" height="56" rx="3" fill="#f6d967" />
+              <rect x="-11" y="-89" width="22" height="8" rx="2" fill="#fff0a4" />
+              <circle cx="0" cy="0" r="29" fill="#e5b83b" />
+              <circle cx="0" cy="0" r="22" fill="#f3d66d" />
+              <circle cx="0" cy="0" r="10" fill="#6d5721" />
+              <rect x="-4" y="-7" width="8" height="14" fill="#3d3319" />
+              <g fill="#fff8cf" opacity="0.8">
+                <rect x="-52" y="-44" width="8" height="4" />
+                <rect x="44" y="-44" width="8" height="4" />
+              </g>
+            </g>
+            <g fill="#5e8f6d" opacity="0.5">
+              <rect x="34" y="206" width="232" height="3" />
+              <rect x="66" y="209" width="168" height="3" />
+            </g>
+            <g fill="#ff9861">
+              <rect x="46" y="82" width="5" height="5" />
+              <rect x="240" y="134" width="4" height="4" />
+              <rect x="72" y="150" width="3" height="3" />
+              <rect x="218" y="70" width="4" height="4" />
+            </g>
+          </svg>
+          <div class="art-caption">RANDOM FRONTLINE · 2 PLAYER CO-OP</div>
+        </div>
+
+        <div class="start-menu">
+          <div class="start-kicker">SELECT MODE</div>
+          <h1 class="game-title"><span>坦克</span>大战</h1>
+          <p class="game-subtitle">TANK BATTLE <span>·</span> 随机战场 · 双人合作 · 六大道具 · 四类敌军</p>
+
+          <div class="mode-options">
+            <button class="mode-btn primary" type="button" data-start-mode="1p">
+              <span class="mode-icon">▰</span>
+              <span class="mode-text"><b>单人闯关</b><small>1 PLAYER · 经典街机体验</small></span>
+              <span class="mode-arrow">›</span>
+            </button>
+            <button class="mode-btn" type="button" data-start-mode="2p">
+              <span class="mode-icon green">▰▰</span>
+              <span class="mode-text"><b>双人合作</b><small>2 PLAYERS · 同屏守护基地</small></span>
+              <span class="mode-arrow">›</span>
+            </button>
+            <div class="mode-grid">
+              <button class="mode-btn compact" type="button" data-start-mode="ai1">
+                <span class="mode-icon cyan">AI</span>
+                <span class="mode-text"><b>AI 演示 · 1P</b><small>自动战斗与续关</small></span>
+              </button>
+              <button class="mode-btn compact" type="button" data-start-mode="ai2">
+                <span class="mode-icon cyan">AI²</span>
+                <span class="mode-text"><b>AI 演示 · 2P</b><small>双坦克协同演示</small></span>
+              </button>
+            </div>
+            <button class="mode-btn outline" type="button" id="open-editor-btn">
+              <span class="mode-icon">✦</span>
+              <span class="mode-text"><b>关卡编辑器</b><small>CUSTOM STAGE · 绘制并试玩自己的战场</small></span>
+              <span class="mode-arrow">›</span>
+            </button>
+          </div>
+
+          <div class="start-footer">
+            <span>ESC / P 暂停</span>
+            <span>双人同屏</span>
+            <span>无限关卡</span>
+            <button type="button" class="text-btn" id="menu-help-btn">查看操作说明</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="editor-screen hidden" id="editor-screen">
+      <div class="editor-shell">
+        <header class="editor-header">
+          <div>
+            <div class="start-kicker">STAGE CONSTRUCTOR</div>
+            <h2>关卡编辑器</h2>
+            <p>按住鼠标绘制，右键擦除。基地与出生点周围为锁定区域。</p>
+          </div>
+          <button class="icon-btn" type="button" id="editor-close-btn">返回主菜单</button>
+        </header>
+
+        <div class="editor-layout">
+          <section class="editor-board-wrap">
+            <canvas id="editor-canvas" width="600" height="600" aria-label="关卡编辑画布"></canvas>
+            <div class="editor-board-hint">15 × 15 网格 · 基地固定于底部中央 · 敌军从顶部三处进入</div>
+          </section>
+
+          <aside class="editor-panel">
+            <section class="editor-section">
+              <label class="field-label" for="editor-name">关卡名称</label>
+              <input class="text-input" id="editor-name" maxlength="24" value="我的关卡" />
+
+              <div class="field-row">
+                <div>
+                  <label class="field-label" for="editor-count">敌军总数</label>
+                  <input class="text-input" id="editor-count" type="number" min="4" max="30" value="14" />
+                </div>
+                <div class="mix-fields">
+                  <span class="field-label">敌军构成 %</span>
+                  <div class="mix-grid">
+                    <label>普通 <input id="mix-basic" type="number" min="0" max="100" value="55" /></label>
+                    <label>快速 <input id="mix-fast" type="number" min="0" max="100" value="25" /></label>
+                    <label>火力 <input id="mix-power" type="number" min="0" max="100" value="15" /></label>
+                    <label>装甲 <input id="mix-armor" type="number" min="0" max="100" value="5" /></label>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="editor-section">
+              <span class="field-label">画笔</span>
+              <div class="tool-grid" id="tool-grid">
+                <button type="button" class="tool-btn active" data-tool="brick"><i style="--swatch:#c97945"></i>砖墙</button>
+                <button type="button" class="tool-btn" data-tool="steel"><i style="--swatch:#a7b7c6"></i>钢墙</button>
+                <button type="button" class="tool-btn" data-tool="tree"><i style="--swatch:#3f9350"></i>树林</button>
+                <button type="button" class="tool-btn" data-tool="water"><i style="--swatch:#2d84ad"></i>水面</button>
+                <button type="button" class="tool-btn" data-tool="ice"><i style="--swatch:#9ed3e8"></i>冰面</button>
+                <button type="button" class="tool-btn" data-tool="erase"><i style="--swatch:#26332e"></i>擦除</button>
+              </div>
+              <div class="editor-button-row">
+                <button class="secondary-btn" type="button" id="editor-random-btn">随机地形</button>
+                <button class="secondary-btn" type="button" id="editor-clear-btn">清空</button>
+                <button class="secondary-btn" type="button" id="editor-builtin-btn">载入经典</button>
+              </div>
+            </section>
+
+            <section class="editor-section">
+              <div class="editor-button-row play-row">
+                <button class="primary-btn" type="button" id="editor-play-1p">单人试玩</button>
+                <button class="primary-btn green-btn" type="button" id="editor-play-2p">双人试玩</button>
+              </div>
+              <div class="editor-button-row">
+                <button class="secondary-btn" type="button" id="editor-save-btn">保存关卡</button>
+                <button class="secondary-btn" type="button" id="editor-export-btn">复制 JSON</button>
+              </div>
+              <label class="field-label" for="saved-levels">已保存关卡</label>
+              <div class="saved-row">
+                <select class="text-input" id="saved-levels"></select>
+                <button class="secondary-btn small" type="button" id="editor-load-btn">载入</button>
+                <button class="secondary-btn small danger-ghost" type="button" id="editor-delete-btn">删除</button>
+              </div>
+            </section>
+
+            <section class="editor-section">
+              <label class="field-label" for="level-json">关卡 JSON（可粘贴导入）</label>
+              <textarea class="json-area" id="level-json" spellcheck="false" placeholder='{"name":"我的关卡","grid":["...............", ...]}'></textarea>
+              <div class="editor-button-row">
+                <button class="secondary-btn" type="button" id="editor-import-btn">导入 JSON</button>
+                <button class="secondary-btn" type="button" id="editor-download-btn">下载 JSON</button>
+              </div>
+            </section>
+          </aside>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-layer hidden" id="help-modal">
+      <div class="modal-card help-card">
+        <div class="modal-head">
+          <div>
+            <div class="start-kicker">FIELD MANUAL</div>
+            <h2>操作说明</h2>
+          </div>
+          <button class="icon-btn" type="button" id="help-close-btn">关闭</button>
+        </div>
+        <div class="help-grid">
+          <section>
+            <h3>玩家操作</h3>
+            <div class="key-table">
+              <div><span>P1 移动</span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></div>
+              <div><span>P1 开火</span><kbd>J</kbd></div>
+              <div><span>P2 移动</span><kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></div>
+              <div><span>P2 开火</span><kbd>空格</kbd><span class="muted">/</span><kbd>0</kbd><span class="muted">/</span><kbd>/</kbd></div>
+              <div><span>暂停</span><kbd>ESC</kbd><span class="muted">或</span><kbd>P</kbd></div>
+            </div>
+          </section>
+          <section>
+            <h3>战场规则</h3>
+            <ul class="rule-list">
+              <li>消灭本关全部敌军即可进入下一关，下一关地形随机生成。</li>
+              <li>基地被击毁或所有玩家耗尽生命即告失败。</li>
+              <li>子弹同样会破坏己方基地，开火前注意弹道。</li>
+              <li>击杀敌人有概率掉落道具，靠近即可拾取。</li>
+              <li>连续拾取星标可提升火力，最高 3 级，可击穿钢墙。</li>
+              <li>AI 演示会由内置算法自动操作，并在成功或失败后自动进入下一关。</li>
+            </ul>
+          </section>
+          <section class="help-wide">
+            <h3>道具一览</h3>
+            <div class="powerup-legend">
+              <span><i class="legend-star">★</i>星标 · 火力升级</span>
+              <span><i class="legend-helmet">⌂</i>头盔 · 无敌护盾</span>
+              <span><i class="legend-grenade">●</i>手雷 · 全屏爆破</span>
+              <span><i class="legend-clock">◷</i>时钟 · 冻结敌军</span>
+              <span><i class="legend-shovel">⛏</i>铁铲 · 基地钢墙</span>
+              <span><i class="legend-life">♥</i>生命 · 额外生命</span>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast hidden" id="toast" role="status"></div>
+
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>
